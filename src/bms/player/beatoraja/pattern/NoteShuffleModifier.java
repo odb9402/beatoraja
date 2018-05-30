@@ -739,7 +739,6 @@ public class NoteShuffleModifier extends PatternModifier {
 
 	}
 
-
 	private static void classifyOriginalLane(Note[] notes, List<Integer> originalLane, List<Integer> noteLane,
 			List<Integer> otherLane, boolean noteTypeCheck) {
 		while (!originalLane.isEmpty()) {
@@ -752,7 +751,6 @@ public class NoteShuffleModifier extends PatternModifier {
 			originalLane.remove(0);
 		}
 	}
-
 
 	private void leaveLastNoteTime(int[] random, int[] lastNoteTime, ArrayList<Integer> note, ArrayList<Integer> tate) {
 		while (!note.isEmpty()) {
