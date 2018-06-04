@@ -489,7 +489,15 @@ public class NoteShuffleModifier extends PatternModifier {
 		initLanes(keys, noAssignedLane, originalLane, max, result);
 
 		// LN�걣�궋�궚�깇�궍�깣�겒�꺃�꺖�꺍�굮�궋�궢�궎�꺍�걮�겍�걢�굢�솮鸚�
-		removeActivatedLane(keys, activeln, assignedLane, originalLane, noAssignedLane, result);
+		for (int lane = 0; lane < keys.length; lane++) {
+			if (activeln != null && activeln[keys[lane]] != -1) {
+				result[keys[lane]] = activeln[keys[lane]];
+				assignedLane.remove((Integer) keys[lane]);
+				originalLane.remove((Integer) activeln[keys[lane]]);
+				if(noAssignedLane != null)
+					noAssignedLane.remove((Integer) keys[lane]);
+			}
+		}
 		
 		List<Integer> noteLane, otherLane;
 		noteLane = new ArrayList<Integer>(keys.length);

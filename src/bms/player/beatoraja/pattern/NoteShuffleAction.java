@@ -1,15 +1,48 @@
 package bms.player.beatoraja.pattern;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import bms.model.LongNote;
+import bms.model.NormalNote;
 import bms.model.Note;
 
-public interface NoteShuffleAction {
+public abstract class NoteShuffleAction {
+	private static int[] laneRendaCount;
+	
+	int[] keys;
+	int[] activelane;
+	
+	// This abstract method is a main process of subclasses from NoteShuffleAction. 
+	abstract int[] shuffle(int[] keys, int[] activeln,
+			Note[] notes, int[] lastNoteTime, int now, int duration1, int duration2);
+	
+	public void removeActivatedLane(int[] keys, int[] activateLane, List<Integer> assignedLane,
+			List<Integer> noAssignedLane, List<Integer> originalLane, int[] result) {
+		for(int lane = 0; lane < keys.length; lane++) {
+			if(removeCondition()) {
+				result[keys[lane]] = activateLane[keys[lane]];
+				assignedLane.remove((Integer) keys[lane]);
+				originalLane.remove((Integer) activateLane[keys[lane]]);
+				removeNoassignedLane();
+			}
+		}
+	}
+	
+	public void makeOtherLaneRandom(int[] result, List<Integer> noteLane, List<Integer> toRandomLane) {
+		int r = (int) (Math.random() * toRandomLane.size());
+		result[toRandomLane.get(r)] = noteLane.get(0);
+		laneRandaCountChange();
+		toRandomLane.remove(r);
+		noteLane.remove(0);
+	}
 
-	public int shuffle(int[] keys, int[] activeln, Note[] notes, int[] lastNoteTime, int now, int duration);
+	abstract void laneRandaCountChange();
 
-	public static void initLanes(int[] keys, List<Integer> laneFirst, List<Integer> laneSecond, int max,
+	abstract boolean removeCondition();
+	
+	abstract void removeNoassignedLane();
+
+	protected void initLanes(int[] keys, List<Integer> laneFirst, List<Integer> laneSecond, int max,
 			int[] result) {
 		for (int key : keys) {
 			laneFirst.add(key);
@@ -21,41 +54,25 @@ public interface NoteShuffleAction {
 			result[i] = i;
 	}
 	
-	
-	public static void removeActivatedLane(int[] keys, int[] activeln, List<Integer> assignLane,
-			List<Integer> originalLane, List<Integer> noAssignedLane, int[] result) {
-		for (int lane = 0; lane < keys.length; lane++) {
-			if (activeln != null && activeln[keys[lane]] != -1) {
-				result[keys[lane]] = activeln[keys[lane]];
-				assignLane.remove((Integer) keys[lane]);
-				originalLane.remove((Integer) activeln[keys[lane]]);
-				if(noAssignedLane != null)
-					noAssignedLane.remove((Integer) keys[lane]);
+	protected void classifyOriginalLane(Note[] notes, List<Integer> originalLane, List<Integer> noteLane,
+			List<Integer> otherLane, boolean noteTypeCheck) {
+		while (!originalLane.isEmpty()) {
+			if (notes[originalLane.get(0)] != null && 
+					((!noteTypeCheck) || (notes[originalLane.get(0)] instanceof NormalNote || notes[originalLane.get(0)] instanceof LongNote))) {
+				noteLane.add(originalLane.get(0));
+			} else {
+				otherLane.add(originalLane.get(0));
 			}
-		}
-	}
-
-	public static void removeActivatedLane(int[] random, int[] ln, int[] keys, ArrayList<Integer> original,
-			ArrayList<Integer> assign) {
-		for (int lane = 0; lane < keys.length; lane++) {
-			if (ln[keys[lane]] != -1) {
-				random[keys[lane]] = ln[keys[lane]];
-				assign.remove((Integer) keys[lane]);
-				original.remove((Integer) ln[keys[lane]]);
-			}
+			originalLane.remove(0);
 		}
 	}
 	
-	static void makeOtherLaneRandom(int[] result, List<Integer> noteLane, List<Integer> toRandomLane, int lineCountBias) {
-		int r = (int) (Math.random() * toRandomLane.size());
-		result[toRandomLane.get(r)] = noteLane.get(0);
-		if(lineCountBias == 0)
-			laneRendaCount[toRandomLane.get(r)] = 0;
-		else if(lineCountBias == 1)
-			laneRendaCount[toRandomLane.get(r)]++;
-		toRandomLane.remove(r);
-		noteLane.remove(0);
-
+	protected void laneRemover(List<Integer> noAssignedLane, int[] result, List<Integer> Lane) {
+		while (!Lane.isEmpty()) {
+			int r = (int) (Math.random() * noAssignedLane.size());
+			result[noAssignedLane.get(r)] = Lane.get(0);
+			noAssignedLane.remove(r);
+			Lane.remove(0);
+		}
 	}
-
 }
