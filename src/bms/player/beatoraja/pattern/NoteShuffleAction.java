@@ -7,40 +7,38 @@ import bms.model.NormalNote;
 import bms.model.Note;
 
 public abstract class NoteShuffleAction {
-	private static int[] laneRendaCount;
-	
 	int[] keys;
 	int[] activelane;
 	
 	// This abstract method is a main process of subclasses from NoteShuffleAction. 
 	abstract int[] shuffle(int[] keys, int[] activeln,
-			Note[] notes, int[] lastNoteTime, int now, int duration1, int duration2);
+			Note[] notes, int[] lastNoteTime, int now, int duration1, int duration2, int[] laneRendaCount);
 	
 	public void removeActivatedLane(int[] keys, int[] activateLane, List<Integer> assignedLane,
 			List<Integer> noAssignedLane, List<Integer> originalLane, int[] result) {
 		for(int lane = 0; lane < keys.length; lane++) {
-			if(removeCondition()) {
+			if(removeCondition(activateLane, keys, lane)) {
 				result[keys[lane]] = activateLane[keys[lane]];
 				assignedLane.remove((Integer) keys[lane]);
 				originalLane.remove((Integer) activateLane[keys[lane]]);
-				removeNoassignedLane();
+				removeNoassignedLane(noAssignedLane, keys, lane);
 			}
 		}
 	}
 	
-	public void makeOtherLaneRandom(int[] result, List<Integer> noteLane, List<Integer> toRandomLane) {
+	public void makeOtherLaneRandom(int[] result, List<Integer> noteLane, List<Integer> toRandomLane, int[] laneRendaCount) {
 		int r = (int) (Math.random() * toRandomLane.size());
 		result[toRandomLane.get(r)] = noteLane.get(0);
-		laneRandaCountChange();
+		laneRandaCountChange(laneRendaCount, toRandomLane);
 		toRandomLane.remove(r);
 		noteLane.remove(0);
 	}
 
-	abstract void laneRandaCountChange();
+	abstract void laneRandaCountChange(int[] laneRendaCount, List<Integer> toRandomLane);
 
-	abstract boolean removeCondition();
+	abstract boolean removeCondition(int[] activeln, int[] keys, int lane);
 	
-	abstract void removeNoassignedLane();
+	abstract void removeNoassignedLane(List<Integer> noAssignedLane, int[] keys, int lane);
 
 	protected void initLanes(int[] keys, List<Integer> laneFirst, List<Integer> laneSecond, int max,
 			int[] result) {

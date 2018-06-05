@@ -46,6 +46,8 @@ public class NoteShuffleModifier extends PatternModifier {
 	 */
 	public static final int SEVEN_TO_NINE = 100;
 
+	private NoteShuffleAction noteShuffleAction;
+	
 	private int modifyType;
 	/**
 	 * 轝▲겗TimeLine罌쀥뒥�늽(SPIRAL�뵪)
@@ -107,8 +109,9 @@ public class NoteShuffleModifier extends PatternModifier {
 					
 				case ALL_SCR:
 					if(mode == Mode.POPN_9K) {
+						noteShuffleAction = new RendaShuffle();
 						keys = getKeys(mode, false);
-						random = keys.length > 0 ? rendaShuffle(keys, ln, notes, lastNoteTime, tl.getTime(), hranThreshold, 60)
+						random = keys.length > 0 ? noteShuffleAction.shuffle(keys, ln, notes, lastNoteTime, tl.getTime(), hranThreshold, 60, laneRendaCount)
 								: keys;
 						break;
 					}
@@ -196,8 +199,8 @@ public class NoteShuffleModifier extends PatternModifier {
 		int[] random;
 		int[] keys;
 		keys = getKeys(mode, false);
-		random = keys.length > 0 ? timeBasedShuffle(keys, ln,
-				notes, lastNoteTime, tl.getTime(), hranThreshold)
+		noteShuffleAction = new TimeBasedShuffle();
+		random = keys.length > 0 ? noteShuffleAction.shuffle(keys, ln, notes, lastNoteTime, tl.getTime(), hranThreshold, -1, laneRendaCount)
 				: keys;
 		return random;
 	}
@@ -208,12 +211,14 @@ public class NoteShuffleModifier extends PatternModifier {
 		int[] keys;
 		keys = getKeys(mode, true);
 		if(mode == Mode.POPN_9K) {
-			random = keys.length > 0 ? noMurioshiShuffle(keys, ln,
-					notes, lastNoteTime, tl.getTime(), hranThreshold)
+			noteShuffleAction = new NoMurioshiShuffle();
+			random = keys.length > 0 ? noteShuffleAction.shuffle(keys, ln,
+					notes, lastNoteTime, tl.getTime(), hranThreshold, -1, laneRendaCount)
 					: keys;
 		} else {
-			random = keys.length > 0 ? timeBasedShuffle(keys, ln,
-					notes, lastNoteTime, tl.getTime(), 40)
+			noteShuffleAction = new TimeBasedShuffle();
+			random = keys.length > 0 ? noteShuffleAction.shuffle(keys, ln,
+					notes, lastNoteTime, tl.getTime(), 40, -1, laneRendaCount)
 					: keys;
 		}
 		return random;
@@ -245,11 +250,12 @@ public class NoteShuffleModifier extends PatternModifier {
 			for (int sc = 0; sc < mode.scratchKey.length; sc++) {
 				sckey.add(mode.scratchKey[sc]);
 			}
-
-			removeActivatedLane(random, ln, keys, original, assign);
+			
+			noteShuffleAction = new ExtraShuffle();
+			noteShuffleAction.removeActivatedLane( keys, ln, assign, null, original, random);
 
 			// �뀇�겗�꺃�꺖�꺍�굮�깕�꺖�깂�겗耶섇쑉�겎�늽窈�
-			classifyOriginalLane(notes, original, note, other, false);
+			noteShuffleAction.classifyOriginalLane(notes, original, note, other, false);
 			
 			// 
 
@@ -278,7 +284,7 @@ public class NoteShuffleModifier extends PatternModifier {
 
 			// �깕�꺖�깂�걣�걗�굥�꺃�꺖�꺍�굮潁��ｃ걣�쇇�뵟�걮�겒�걚�꺃�꺖�꺍�겓�꺀�꺍���깲�겓�뀓營�
 			while (!(note.isEmpty() || primary.isEmpty())) 
-				makeOtherLaneRandom(random, note, primary, -1);
+				noteShuffleAction.makeOtherLaneRandom(random, note, primary, laneRendaCount);
 
 			// noteLane�걣令뷩겎�겒�걢�겂�걼�굢
 			// lastNoteTime�걣弱뤵걬�걚�꺃�꺖�꺍�걢�굢�젂�빁�겓營��걚�겍�걚�걦
@@ -287,7 +293,7 @@ public class NoteShuffleModifier extends PatternModifier {
 			primary.addAll(tate);
 			// 餘뗣굤�굮�꺀�꺍���깲�겓
 			while (!other.isEmpty())
-				makeOtherLaneRandom(random, other, primary, -1);
+				noteShuffleAction.makeOtherLaneRandom(random, other, primary, laneRendaCount);
 
 
 		} else if (mode.player == 2) {
@@ -322,9 +328,12 @@ public class NoteShuffleModifier extends PatternModifier {
 			}
 
 			// LN�걣�궋�궚�깇�궍�깣�겒�꺃�꺖�꺍�굮�궋�궢�궎�꺍�걮�겍�걢�굢�솮鸚�
-			removeActivatedLane(random, ln, keys, original, assign);
+			//removeActivatedLane(random, ln, keys, original, assign);
+			noteShuffleAction = new ExtraShuffle();
+			noteShuffleAction.removeActivatedLane( keys, ln, assign, null, original, random);
 
-			classifyOriginalLane(notes, original, note, other, false);
+			
+			noteShuffleAction.classifyOriginalLane(notes, original, note, other, false);
 
 			// �쑋�궋�궢�궎�꺍�꺃�꺖�꺍�굮潁��ｇ쇇�뵟�걢�겑�걝�걢�겎�늽窈�
 			while (!assign.isEmpty()) {
@@ -363,10 +372,12 @@ public class NoteShuffleModifier extends PatternModifier {
 		int[] random;
 		int[] keys;
 		keys = getKeys(mode, false);
+		noteShuffleAction = new TimeBasedShuffle();
+		
 		if(mode == Mode.POPN_9K)
-			random = keys.length > 0 ? timeBasedShuffle(keys, ln, notes, lastNoteTime, tl.getTime(), 0): keys;
+			random = keys.length > 0 ? noteShuffleAction.shuffle(keys, ln, notes, lastNoteTime, tl.getTime(), 0, -1, laneRendaCount): keys;
 		else
-			random = keys.length > 0 ? timeBasedShuffle(keys, ln, notes, lastNoteTime, tl.getTime(), 40): keys;
+			random = keys.length > 0 ? noteShuffleAction.shuffle(keys, ln, notes, lastNoteTime, tl.getTime(), 40, -1, laneRendaCount): keys;
 		return random;
 	}
 
@@ -411,186 +422,6 @@ public class NoteShuffleModifier extends PatternModifier {
 			}
 		}
 		return random;
-	}
-
-
-	// �쎍�뎺�깕�꺖�깂�겏�겗�셽�뼋�껅뀸shuffle duration[ms]�셽�뼋�쑋繹��겗潁��ｆ돀�걣�눣�씎�굥�걽�걨�쇇�뵟�걮�겒�걚�굠�걝�겓shuffle�굮�걢�걨�굥
-	private static int[] timeBasedShuffle(int[] keys, int[] activeln,
-			Note[] notes, int[] lastNoteTime, int now, int duration) {
-		List<Integer> assignLane = new ArrayList<Integer>(keys.length);
-		List<Integer> originalLane = new ArrayList<Integer>(keys.length);
-		int max = 0;
-		int[] result = new int[max + 1];
-		
-		initLanes(keys, assignLane, originalLane, max, result);
-
-		removeActivatedLane(keys, activeln, assignLane, originalLane, null, result);
-		
-		List<Integer> noteLane, otherLane;
-		noteLane = new ArrayList<Integer>(keys.length);
-		otherLane = new ArrayList<Integer>(keys.length);
-
-		classifyOriginalLane(notes, originalLane, noteLane, otherLane, false);
-		
-
-		// �쑋�궋�궢�궎�꺍�꺃�꺖�꺍�굮潁��ｇ쇇�뵟�걢�겑�걝�걢�겎�늽窈�
-		List<Integer> rendaLane, primaryLane;
-		rendaLane = new ArrayList<Integer>(keys.length);
-		primaryLane = new ArrayList<Integer>(keys.length);
-		
-		while (!assignLane.isEmpty()) {
-			if (now - lastNoteTime[assignLane.get(0)] < duration) {
-				rendaLane.add(assignLane.get(0));
-			} else {
-				primaryLane.add(assignLane.get(0));
-			}
-			assignLane.remove(0);
-		}
-
-		// �깕�꺖�깂�걣�걗�굥�꺃�꺖�꺍�굮潁��ｃ걣�쇇�뵟�걮�겒�걚�꺃�꺖�꺍�겓�뀓營�
-		while (!(noteLane.isEmpty() || primaryLane.isEmpty()))
-			makeOtherLaneRandom(result, noteLane, primaryLane, -1);
-
-		// noteLane�걣令뷩겎�겒�걢�겂�걼�굢
-		// lastNoteTime�걣弱뤵걬�걚�꺃�꺖�꺍�걢�굢�젂�빁�겓營��걚�겍�걚�걦
-		while (!noteLane.isEmpty()) {
-			int min = Integer.MAX_VALUE;
-			int r = rendaLane.get(0);
-			for (int i = 0; i < rendaLane.size(); i++) {
-				if (min > lastNoteTime[rendaLane.get(i)]) {
-					min = lastNoteTime[rendaLane.get(i)];
-				}
-			}
-			ArrayList<Integer> minLane = new ArrayList<Integer>(rendaLane.size());
-			for (int i = 0; i < rendaLane.size(); i++) {
-				if (min == lastNoteTime[rendaLane.get(i)]) {
-					minLane.add(rendaLane.get(i));
-				}
-			}
-			makeOtherLaneRandom(result, noteLane, minLane, -1);
-		}
-
-		primaryLane.addAll(rendaLane);
-		laneRemover(primaryLane, result, otherLane);
-
-		return result;
-	}
-
-	// �꽒�릤�듉�걮�겏duration[ms]�셽�뼋�쑋繹��겗潁��ｆ돀�걣�겒�굥�겧�걦�씎�겒�걚�굠�걝�겓shuffle�굮�걢�걨�굥
-	private static int[] noMurioshiShuffle(int[] keys, int[] activeln,
-		Note[] notes, int[] lastNoteTime, int now, int duration) {
-		List<Integer> assignedLane = new ArrayList<Integer>(keys.length);
-		List<Integer> noAssignedLane = new ArrayList<Integer>(keys.length);
-		List<Integer> originalLane = new ArrayList<Integer>(keys.length);
-
-		int max = 0;
-		int[] result = new int[max + 1];
-		
-		initLanes(keys, noAssignedLane, originalLane, max, result);
-
-		// LN�걣�궋�궚�깇�궍�깣�겒�꺃�꺖�꺍�굮�궋�궢�궎�꺍�걮�겍�걢�굢�솮鸚�
-		for (int lane = 0; lane < keys.length; lane++) {
-			if (activeln != null && activeln[keys[lane]] != -1) {
-				result[keys[lane]] = activeln[keys[lane]];
-				assignedLane.remove((Integer) keys[lane]);
-				originalLane.remove((Integer) activeln[keys[lane]]);
-				if(noAssignedLane != null)
-					noAssignedLane.remove((Integer) keys[lane]);
-			}
-		}
-		
-		List<Integer> noteLane, otherLane;
-		noteLane = new ArrayList<Integer>(keys.length);
-		otherLane = new ArrayList<Integer>(keys.length);
-
-		classifyOriginalLane(notes, originalLane, noteLane, otherLane, true);
-
-		//�꽒�릤�듉�걮�겓�겒�굢�겒�걚�굠�걝�겓�꺀�꺍���깲�겓營��걚�겍�걚�걦
-		//7�뗦듉�걮餓δ툓�겎�겘�꽒�릤�듉�걮�걮�걢耶섇쑉�걮�겒�걚�겗�겎�솮鸚�
-		if(assignedLane.size() + noteLane.size() <= 6) {
-			preventMoreThanSevenKeys(keys, lastNoteTime, now, duration, assignedLane, noAssignedLane, max, result,
-					noteLane);
-		}
-
-		laneRemover(noAssignedLane, result, noteLane);
-
-		// 餘뗣굤�굮�꺀�꺍���깲�겓營��걚�겍�걚�걦
-		laneRemover(noAssignedLane, result, otherLane);
-
-		return result;
-	}
-
-	// duration2[ms]�셽�뼋�쑋繹��겗潁��ｆ돀�굮�눣�씎�굥�걽�걨�겳�걨�겇�겇duration1[ms]�셽�뼋�쑋繹��겗潁��ｆ돀�걣�눣�씎�굥�걽�걨�빓�걦�쇇�뵟�걲�굥�굠�걝�겓shuffle�굮�걢�걨�굥
-	private static int[] rendaShuffle(int[] keys, int[] activeln,
-			Note[] notes, int[] lastNoteTime, int now, int duration1, int duration2) {
-		List<Integer> assignLane = new ArrayList<Integer>(keys.length);
-		List<Integer> originalLane = new ArrayList<Integer>(keys.length);
-		int max = 0;
-		int[] result = new int[max + 1];
-		
-		initLanes(keys, assignLane, originalLane, max, result);
-		removeActivatedLane(keys, activeln, assignLane, originalLane, null, result);
-		
-		List<Integer> noteLane, otherLane;
-		noteLane = new ArrayList<Integer>(keys.length);
-		otherLane = new ArrayList<Integer>(keys.length);
-
-		classifyOriginalLane(notes, originalLane, noteLane, otherLane, true);
-
-		// �쑋�궋�궢�궎�꺍�꺃�꺖�꺍�굮潁��ｆ돀�쇇�뵟�걢�겑�걝�걢�겎�늽窈�
-		List<Integer> rendaLane,mainRendaLane, noRendaLane;
-		rendaLane = new ArrayList<Integer>(keys.length);
-		mainRendaLane = new ArrayList<Integer>(keys.length);
-		noRendaLane = new ArrayList<Integer>(keys.length);
-		while (!assignLane.isEmpty()) {
-			if (now - lastNoteTime[assignLane.get(0)] < duration2) {
-				rendaLane.add(assignLane.get(0));
-			} else if(now - lastNoteTime[assignLane.get(0)] < duration1) {
-				mainRendaLane.add(assignLane.get(0));
-			} else {
-				noRendaLane.add(assignLane.get(0));
-			}
-			assignLane.remove(0);
-		}
-
-		// �깕�꺖�깂�걣�걗�굥�꺃�꺖�꺍�굮潁��ｆ돀�걣�쇇�뵟�걲�굥�꺃�꺖�꺍�겓�빓�걚�젂�겓�뀓營�
-		while (!(noteLane.isEmpty() || mainRendaLane.isEmpty())) {
-			int maxRenda = Integer.MIN_VALUE;
-
-			for (int i = 0; i < mainRendaLane.size(); i++) 
-				if (maxRenda < laneRendaCount[mainRendaLane.get(i)])
-					maxRenda = laneRendaCount[mainRendaLane.get(i)];
-
-			ArrayList<Integer> maxLane = new ArrayList<Integer>(mainRendaLane.size());
-			for (int i = 0; i < mainRendaLane.size(); i++) 
-				if (maxRenda == laneRendaCount[mainRendaLane.get(i)]) 
-					maxLane.add(mainRendaLane.get(i));
-
-			makeOtherLaneRandom(result, noteLane, mainRendaLane, 1);
-		}
-
-		// noteLane�걣令뷩겎�겒�걢�겂�걼�굢餘뗣굤�겗�깕�꺖�깉�굮潁��ｆ돀�겓�겒�굢�겒�걚�꺃�꺖�꺍�걢�굢�꺀�꺍���깲�겓營��걚�겍�걚�걦
-		while (!(noteLane.isEmpty() || noRendaLane.isEmpty()))
-			makeOtherLaneRandom(result, noteLane, noRendaLane, 0);
-
-		// noteLane�걣令뷩겎�겒�걢�겂�걼�굢餘뗣굤�겗�깕�꺖�깉�굮�꺀�꺍���깲�겓營��걚�겍�걚�걦
-		while (!(noteLane.isEmpty() || rendaLane.isEmpty()))
-			makeOtherLaneRandom(result, noteLane, rendaLane, 1);
-
-		// 餘뗣굤�굮�꺀�꺍���깲�겓營��걚�겍�걚�걦
-		noRendaLane.addAll(rendaLane);
-		noRendaLane.addAll(mainRendaLane);
-		
-		while (!otherLane.isEmpty()) {
-			int r = (int) (Math.random() * noRendaLane.size());
-			result[noRendaLane.get(r)] = otherLane.get(0);
-			if(rendaLane.indexOf(noRendaLane.get(r)) == -1)
-				laneRendaCount[noRendaLane.get(r)] = 0;
-			noRendaLane.remove(r);
-			otherLane.remove(0);
-		}
-
-		return result;
 	}
 
 
@@ -681,83 +512,13 @@ public class NoteShuffleModifier extends PatternModifier {
 		}
 		return result;
 	}
-
-	private static void laneRemover(List<Integer> noAssignedLane, int[] result, List<Integer> Lane) {
-		while (!Lane.isEmpty()) {
-			int r = (int) (Math.random() * noAssignedLane.size());
-			result[noAssignedLane.get(r)] = Lane.get(0);
-			noAssignedLane.remove(r);
-			Lane.remove(0);
-		}
-	}
-
-	private static void initLanes(int[] keys, List<Integer> laneFirst, List<Integer> laneSecond, int max,
-			int[] result) {
-		for (int key : keys) {
-			laneFirst.add(key);
-			laneSecond.add(key);
-		}
-		for (int key : keys) 
-			max = Math.max(max, key);
-		for (int i = 0; i < result.length; i++) 
-			result[i] = i;
-	}
+	
 	
 	private void calculateHranThreshold() {
 		if(config.getHranThresholdBPM() <= 0)
 			hranThreshold = 0;
 		else
 			hranThreshold = (int) (Math.ceil(15000.0f / config.getHranThresholdBPM()));
-	}
-	
-	private static void removeActivatedLane(int[] keys, int[] activeln, List<Integer> assignLane,
-			List<Integer> originalLane, List<Integer> noAssignedLane, int[] result) {
-		for (int lane = 0; lane < keys.length; lane++) {
-			if (activeln != null && activeln[keys[lane]] != -1) {
-				result[keys[lane]] = activeln[keys[lane]];
-				assignLane.remove((Integer) keys[lane]);
-				originalLane.remove((Integer) activeln[keys[lane]]);
-				if(noAssignedLane != null)
-					noAssignedLane.remove((Integer) keys[lane]);
-			}
-		}
-	}
-
-
-	private void removeActivatedLane(int[] random, int[] ln, int[] keys, ArrayList<Integer> original,
-			ArrayList<Integer> assign) {
-		for (int lane = 0; lane < keys.length; lane++) {
-			if (ln[keys[lane]] != -1) {
-				random[keys[lane]] = ln[keys[lane]];
-				assign.remove((Integer) keys[lane]);
-				original.remove((Integer) ln[keys[lane]]);
-			}
-		}
-	}
-	
-	private static void makeOtherLaneRandom(int[] result, List<Integer> noteLane, List<Integer> toRandomLane, int lineCountBias) {
-		int r = (int) (Math.random() * toRandomLane.size());
-		result[toRandomLane.get(r)] = noteLane.get(0);
-		if(lineCountBias == 0)
-			laneRendaCount[toRandomLane.get(r)] = 0;
-		else if(lineCountBias == 1)
-			laneRendaCount[toRandomLane.get(r)]++;
-		toRandomLane.remove(r);
-		noteLane.remove(0);
-
-	}
-
-	private static void classifyOriginalLane(Note[] notes, List<Integer> originalLane, List<Integer> noteLane,
-			List<Integer> otherLane, boolean noteTypeCheck) {
-		while (!originalLane.isEmpty()) {
-			if (notes[originalLane.get(0)] != null && 
-					((!noteTypeCheck) || (notes[originalLane.get(0)] instanceof NormalNote || notes[originalLane.get(0)] instanceof LongNote))) {
-				noteLane.add(originalLane.get(0));
-			} else {
-				otherLane.add(originalLane.get(0));
-			}
-			originalLane.remove(0);
-		}
 	}
 
 	private void leaveLastNoteTime(int[] random, int[] lastNoteTime, ArrayList<Integer> note, ArrayList<Integer> tate) {
@@ -773,72 +534,6 @@ public class NoteShuffleModifier extends PatternModifier {
 			random[minLane] = note.get(0);
 			tate.remove((Integer) minLane);
 			note.remove(0);
-		}
-	}
-	
-	private static void preventMoreThanSevenKeys(int[] keys, int[] lastNoteTime, int now, int duration,
-			List<Integer> assignedLane, List<Integer> noAssignedLane, int max, int[] result, List<Integer> noteLane) {
-		List<Integer> kouhoLane = new ArrayList<Integer>(keys.length); //營��걨�굥�숃짒
-		List<Integer> rendaLane = new ArrayList<Integer>(keys.length); //營��걦�겏潁��ｆ돀�겓�겒�굥�꺃�꺖�꺍
-		while (!(noteLane.isEmpty() || noAssignedLane.isEmpty())) {
-			kouhoLane.clear();
-			rendaLane.clear();
-			if(assignedLane.size() <= 1) {
-				kouhoLane.addAll(noAssignedLane); //�뿢�겓�깕�꺖�깉�걣營��걢�굦�겍�걚�굥�꺃�꺖�꺍�걣1�뗤빳訝뗣겎�걗�굦�겙�뀲�깿�걣�숃짒
-			} else {
-				int[] referencePoint = new int[2]; //�뿢�겓�깕�꺖�깉�걣營��걢�굦�겍�걚�굥�꺃�꺖�꺍�겗訝��겎藥�塋��겗�꺃�꺖�꺍�겏�뤂塋��겗�꺃�꺖�꺍
-				referencePoint[0] = max;
-				referencePoint[1] = 0;
-				for(int i = 0; i < assignedLane.size(); i++){
-					referencePoint[0] = Math.min(referencePoint[0] , assignedLane.get(i));
-					referencePoint[1] = Math.max(referencePoint[1] , assignedLane.get(i));
-				}
-				if(referencePoint[1] - referencePoint[0] <= 2) {
-					kouhoLane.addAll(noAssignedLane); //�뿢�겓�깕�꺖�깉�걣營��걢�굦�겍�걚�굥�꺃�꺖�꺍�걣�뎴�뎸�겎�듉�걵�굥影꾢쎊�겎�걗�굦�겙�뀲�깿�걣�숃짒
-				} else if(referencePoint[1] - referencePoint[0] == 3) {
-					if(noAssignedLane.indexOf(referencePoint[0] - 2) != -1) kouhoLane.add(referencePoint[0] - 2);
-					if(noAssignedLane.indexOf(referencePoint[0] - 1) != -1) kouhoLane.add(referencePoint[0] - 1);
-					if(noAssignedLane.indexOf(referencePoint[0] + 1) != -1) kouhoLane.add(referencePoint[0] + 1);
-					if(noAssignedLane.indexOf(referencePoint[0] + 2) != -1) kouhoLane.add(referencePoint[0] + 2);
-					if(noAssignedLane.indexOf(referencePoint[1] + 2) != -1) kouhoLane.add(referencePoint[1] + 2);
-					if(noAssignedLane.indexOf(referencePoint[1] + 1) != -1) kouhoLane.add(referencePoint[1] + 1);
-					if(noAssignedLane.indexOf(referencePoint[1] - 1) != -1) kouhoLane.add(referencePoint[1] - 1);
-					if(noAssignedLane.indexOf(referencePoint[1] - 2) != -1) kouhoLane.add(referencePoint[1] - 2);
-				} else if(referencePoint[1] - referencePoint[0] == 4) {
-					if(noAssignedLane.indexOf(referencePoint[0] - 2) != -1 && noAssignedLane.indexOf(referencePoint[0] + 1) != -1) kouhoLane.add(referencePoint[0] - 2);
-					if(noAssignedLane.indexOf(referencePoint[0] - 1) != -1) kouhoLane.add(referencePoint[0] - 1);
-					if(noAssignedLane.indexOf(referencePoint[0] + 1) != -1) kouhoLane.add(referencePoint[0] + 1);
-					if(noAssignedLane.indexOf(referencePoint[0] + 2) != -1) kouhoLane.add(referencePoint[0] + 2);
-					if(noAssignedLane.indexOf(referencePoint[1] + 2) != -1 && noAssignedLane.indexOf(referencePoint[1] - 1) != -1) kouhoLane.add(referencePoint[1] + 2);
-					if(noAssignedLane.indexOf(referencePoint[1] + 1) != -1) kouhoLane.add(referencePoint[1] + 1);
-					if(noAssignedLane.indexOf(referencePoint[1] - 1) != -1) kouhoLane.add(referencePoint[1] - 1);
-					if(noAssignedLane.indexOf(referencePoint[1] - 2) != -1) kouhoLane.add(referencePoint[1] - 2);
-				} else if(referencePoint[1] - referencePoint[0] >= 5) {
-					if(noAssignedLane.indexOf(referencePoint[0] - 2) != -1 && noAssignedLane.indexOf(referencePoint[0] + 1) != -1 && noAssignedLane.indexOf(referencePoint[0] + 2) != -1) kouhoLane.add(referencePoint[0] - 2);
-					if(noAssignedLane.indexOf(referencePoint[0] - 1) != -1 && noAssignedLane.indexOf(referencePoint[0] + 2) != -1) kouhoLane.add(referencePoint[0] - 1);
-					if(noAssignedLane.indexOf(referencePoint[0] + 1) != -1) kouhoLane.add(referencePoint[0] + 1);
-					if(noAssignedLane.indexOf(referencePoint[0] + 2) != -1) kouhoLane.add(referencePoint[0] + 2);
-					if(noAssignedLane.indexOf(referencePoint[1] + 2) != -1 && noAssignedLane.indexOf(referencePoint[1] - 1) != -1 && noAssignedLane.indexOf(referencePoint[1] - 2) != -1) kouhoLane.add(referencePoint[1] + 2);
-					if(noAssignedLane.indexOf(referencePoint[1] + 1) != -1 && noAssignedLane.indexOf(referencePoint[1] - 2) != -1) kouhoLane.add(referencePoint[1] + 1);
-					if(noAssignedLane.indexOf(referencePoint[1] - 1) != -1) kouhoLane.add(referencePoint[1] - 1);
-					if(noAssignedLane.indexOf(referencePoint[1] - 2) != -1) kouhoLane.add(referencePoint[1] - 2);
-				}
-			}
-			for(int i = 0; i < kouhoLane.size(); i++){
-				if (now - lastNoteTime[kouhoLane.get(i)] < duration) {
-					rendaLane.add(kouhoLane.get(i));
-				}
-			}
-			if(kouhoLane.size() > rendaLane.size())
-				kouhoLane.removeAll(rendaLane); //潁��ｆ돀�겓�겒�굥�꺃�꺖�꺍�굮�솮鸚뽧�귙걼�걽�걮�숃짒�뀲�깿�걣潁��ｆ돀�겓�겒�굥�졃�릦�꽒�릤�듉�걮�겎�겒�걚�걪�겏�겗�뼶�굮�꽛�뀍
-			if(kouhoLane.isEmpty())
-				break;
-			
-			int r = (int) (Math.random() * kouhoLane.size());
-			result[kouhoLane.get(r)] = noteLane.get(0);
-			assignedLane.add(kouhoLane.get(r));
-			noAssignedLane.remove(kouhoLane.get(r));
-			noteLane.remove(0);
 		}
 	}
 
