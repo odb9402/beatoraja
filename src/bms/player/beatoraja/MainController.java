@@ -460,12 +460,12 @@ public class MainController extends ApplicationAdapter {
             //current.input();
             // event - move pressed
             if (mouseData.isMousePressed()) {
-            	mouseData.setMousePressed();
+            	mouseData.setMousePressed(false);
                 current.getSkin().mousePressed(current, mouseData.getMouseButton(), mouseData.getMouseX(), mouseData.getMouseY());
             }
             // event - move dragged
             if (mouseData.isMouseDragged()) {
-            	mouseData.setMouseDragged();
+            	mouseData.setMouseDragged(false);
                 current.getSkin().mouseDragged(current, mouseData.getMouseButton(), mouseData.getMouseX(), mouseData.getMouseY());
             }
 

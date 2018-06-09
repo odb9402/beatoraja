@@ -1,9 +1,9 @@
 package bms.player.beatoraja.input;
 
 public class keyData {
-	public static Key[] key = new Key[256];
-	public static Key[] numberKey = new Key[10];
-	public static Key[] functionKey = new Key[12];
+	private static Key[] key = new Key[256];
+	private static Key[] numberKey = new Key[10];
+	private static Key[] functionKey = new Key[12];
 
 	
 	// methods for key
