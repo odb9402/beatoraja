@@ -2,6 +2,7 @@ package bms.player.beatoraja.skin;
 
 import bms.player.beatoraja.MainController;
 import bms.player.beatoraja.MainState;
+import bms.player.beatoraja.input.mouseData;
 import bms.player.beatoraja.skin.Skin.SkinObjectRenderer;
 
 import com.badlogic.gdx.graphics.Color;
@@ -11,14 +12,14 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.*;
 
 /**
- * �궧�궘�꺍�궕�깣�궦�궒�궚�깉
+ * �뜝�럡�븣�뜝�럡�뀭�뜝�럡�떋�뜝�럡�뀧�뜝�럡臾띶뜝�럡�븢�뜝�럡�뀢�뜝�럡�뀯�뜝�럡�돮
  * 
  * @author exch
  */
 public abstract class SkinObject implements Disposable {
 
 	/**
-	 * �궕�깢�궩�긿�깉�겗�뢿�뀱ID
+	 * �뜝�럡�뀧�뜝�럡臾꾢뜝�럡�븧�뜝�럡留쇿뜝�럡�돮�뜝�럡荑곩뜝�럥�솲�뜝�럥占쎌펽D
 	 */
 	private int[] offset = new int[0];
 
@@ -26,15 +27,15 @@ public abstract class SkinObject implements Disposable {
 
 	private int imageid = -1;
 	/**
-	 * �뢿�뀱�걲�굥�궭�궎�깯�꺖ID
+	 * �뜝�럥�솲�뜝�럥占쎄퉵�삕椰꾨�먯삕�뤃恝�삕亦낉옙�뜝�럡�뀞�뜝�럡臾삣뜝�럡�떖ID
 	 */
 	private int dsttimer = 0;
 	/**
-	 * �꺂�꺖�깤�뼀冶뗣궭�궎�깯�꺖
+	 * �뜝�럡�땽�뜝�럡�떖�뜝�럡臾뤷뜝�럥占쏙옙�꽱占쎈엔亦낉옙�뜝�럡�뀞�뜝�럡臾삣뜝�럡�떖
 	 */
 	private int dstloop = 0;
 	/**
-	 * �깣�꺃�꺍�깋(2:�뒥嶸�, 9:�룏邕�)
+	 * �뜝�럡臾띶뜝�럡�땿�뜝�럡�떋�뜝�럡�돰(2:�뜝�럥裕숃뮲紐뚯삕, 9:�뜝�럥利쏙옙援꿨뜝占�)
 	 */
 	private int dstblend = 0;
     /**
@@ -46,53 +47,53 @@ public abstract class SkinObject implements Disposable {
 	private int imageType;
 	
 	/**
-	 * �뵽�깗�썮邕㏂겗訝�恙�
+	 * �뜝�럥�룙�뜝�럡�돽�뜝�럩�쑏占쎄뎡占쎈♧野껋�⑥칮�뜝�뜽嫄꿨뜝占�
 	 */
 	private int dstcenter;
 
 	private int acc;
 	/**
-	 * �궕�깣�궦�궒�궚�깉�궚�꺁�긿�궚�셽�겓若잒죱�걲�굥�궎�깧�꺍�깉�겗�뢿�뀱ID
+	 * �뜝�럡�뀧�뜝�럡臾띶뜝�럡�븢�뜝�럡�뀢�뜝�럡�뀯�뜝�럡�돮�뜝�럡�뀯�뜝�럡�땼�뜝�럡留쇿뜝�럡�뀯�뜝�럩�걢�뜝�럡苡썹븨�똻�삃雅뚭퉵�삕椰꾨�먯삕�뤃恝�삕亦낅〕�삕繹먦룇�삕�댆�엪�삕繹먮맮�삕野껋���삕�뙳�슱�삕占쎌펽D
 	 */
 	private int clickevent = -1;
 	/**
-	 * �궕�깣�궦�궒�궚�깉�궚�꺁�긿�궚�닩若싥꺕�궎�깧�꺍�깉凉뺞빊�겗葉�窈�
-	 * 0: �싧만(plus only)
-	 * 1: �싧만(minus only)
-	 * 2: 藥��뤂�늽�돯(藥�=minus,�뤂=plus)
-	 * 3: 訝듾툔�늽�돯(訝�=minus,訝�=plus)
+	 * �뜝�럡�뀧�뜝�럡臾띶뜝�럡�븢�뜝�럡�뀢�뜝�럡�뀯�뜝�럡�돮�뜝�럡�뀯�뜝�럡�땼�뜝�럡留쇿뜝�럡�뀯�뜝�럥�뼋�븨�똻�뼅�댆類㏃삕亦낅〕�삕繹먦룇�삕�댆�엪�삕繹먮맮�뀳筌먯쉶�돯�뜝�럡荑곻옙紐쎾뜝�뜾梨삣뜝占�
+	 * 0: �뜝�럩�뼇筌랃옙(plus only)
+	 * 1: �뜝�럩�뼇筌랃옙(minus only)
+	 * 2: 占쎈엠�뜝�룞�삕筌뚭랬�삕占쎈뱤�뜝�럥猷�(占쎈엠�뜝占�=minus,�뜝�럥夷�=plus)
+	 * 3: 庸뉗빖踰�占쎈땸�뜝�럥�뱤�뜝�럥猷�(庸뉗빢�삕=minus,庸뉗빢�삕=plus)
 	 */
 	private int clickeventType = 0;
 	/**
-	 * �룒�뵽�씉餓뜰겏�겒�굥�궕�깤�궥�깾�꺍若싩쑴
+	 * �뜝�럥吏귛뜝�럥�룙�뜝�럩逾껆튊蹂μ몣野껊쪋�삕野껊���삕�뤃恝�삕亦낅벨�삕繹먦끏�삕亦끤우삕繹먯뼲�삕�댆�엪�뀮占쎈뼋占쎈쳮
 	 */
 	private int[] dstop = new int[0];
 	/**
-	 * �룒�뵽�씉餓뜰겗�깯�궑�궧影꾢쎊
+	 * �뜝�럥吏귛뜝�럥�룙�뜝�럩逾껆튊蹂μ몣野껋���삕繹먲옙�뜝�럡�뀡�뜝�럡�븣鶯ㅺ퉫�맻占쎈윧
 	 */
 	private Rectangle mouseRect = null;
 	/**
-	 * �뵽�깗�겗鴉며리�뼶力뺛겗�뙁若�
+	 * �뜝�럥�룙�뜝�럡�돽�뜝�럡荑곮쓩�맧흭�뵳�띿삕�젆�씛已뀐쭚�룄荑곩뜝�럥�끉�븨�뙋�삕
 	 */
 	private StretchType stretch = StretchType.STRETCH;
 
 	public enum StretchType {
-		// �룒�뵽�뀍�겗影꾢쎊�겓�릦�굩�걵�겍鴉며리�걲�굥
+		// �뜝�럥吏귛뜝�럥�룙�뜝�럥占쎈엪�삕野껋�μ돺熬곻옙占쎈윧�뜝�럡苡썲뜝�럥�뵒�뜝�럡���뜝�럡援섇뜝�럡苡룩쓩�맧흭�뵳�띿삕椰꾨�먯삕�뤃占�
 		STRETCH(0),
-		// �궋�궧�깪�궚�깉驪붵굮岳앫걾�겇�겇�룒�뵽�뀍�겗影꾢쎊�겓�룑�겲�굥�굠�걝�겓鴉며리�걲�굥
+		// �뜝�럡�뀘�뜝�럡�븣�뜝�럡臾ュ뜝�럡�뀯�뜝�럡�돮�솾�돃�뼨�뤃占쏙Ⅶ�끃鍮귛쳞�뼲�삕野껊돍�삕野껊돍�삕�뙴誘��삕�얠룞�삕占쎈엪�삕野껋�μ돺熬곻옙占쎈윧�뜝�럡苡썲뜝�럥利욕뜝�럡猿섇뜝�럡�뜲�뜝�럡�꼧�뜝�럡肄ⓨ뜝�럡苡썼쓩�맧흭�뵳�띿삕椰꾨�먯삕�뤃占�
 		KEEP_ASPECT_RATIO_FIT_INNER(1),
-		// �궋�궧�깪�궚�깉驪붵굮岳앫걾�겇�겇�룒�뵽�뀍�겗影꾢쎊�뀲鵝볝굮誤녴걝�굠�걝�겓鴉며리�걲�굥
+		// �뜝�럡�뀘�뜝�럡�븣�뜝�럡臾ュ뜝�럡�뀯�뜝�럡�돮�솾�돃�뼨�뤃占쏙Ⅶ�끃鍮귛쳞�뼲�삕野껊돍�삕野껊돍�삕�뙴誘��삕�얠룞�삕占쎈엪�삕野껋�μ돺熬곻옙占쎈윧�뜝�럥占쎄였�꼤癰귥빓�럩亦껁끇�얍쳞�빢�삕�뤃醫묒삕椰꾩빢�삕野껊끽�겫筌롪퀡�봺�뜝�럡援됧뜝�럡�뜲
 		KEEP_ASPECT_RATIO_FIT_OUTER(2),
 		KEEP_ASPECT_RATIO_FIT_OUTER_TRIMMED(3),
-		// �궋�궧�깪�궚�깉驪붵굮岳앫걾�겇�겇�룒�뵽�뀍�겗與ゅ퉭�겓�릦�굩�걵�겍鴉며리�걲�굥
+		// �뜝�럡�뀘�뜝�럡�븣�뜝�럡臾ュ뜝�럡�뀯�뜝�럡�돮�솾�돃�뼨�뤃占쏙Ⅶ�끃鍮귛쳞�뼲�삕野껊돍�삕野껊돍�삕�뙴誘��삕�얠룞�삕占쎈엪�삕野껋�⑤듋占쎄턁占쎈룵�뜝�럡苡썲뜝�럥�뵒�뜝�럡���뜝�럡援섇뜝�럡苡룩쓩�맧흭�뵳�띿삕椰꾨�먯삕�뤃占�
 		KEEP_ASPECT_RATIO_FIT_WIDTH(4),
 		KEEP_ASPECT_RATIO_FIT_WIDTH_TRIMMED(5),
-		// �궋�궧�깪�궚�깉驪붵굮岳앫걾�겇�겇�룒�뵽�뀍�겗潁�亮끹겓�릦�굩�걵�겍鴉며리�걲�굥
+		// �뜝�럡�뀘�뜝�럡�븣�뜝�럡臾ュ뜝�럡�뀯�뜝�럡�돮�솾�돃�뼨�뤃占쏙Ⅶ�끃鍮귛쳞�뼲�삕野껊돍�삕野껊돍�삕�뙴誘��삕�얠룞�삕占쎈엪�삕野껋���릹�뜝�룞�뀱占쎄꺌野껊낑�삕�뵳占썲뜝�럡���뜝�럡援섇뜝�럡苡룩쓩�맧흭�뵳�띿삕椰꾨�먯삕�뤃占�
 		KEEP_ASPECT_RATIO_FIT_HEIGHT(6),
 		KEEP_ASPECT_RATIO_FIT_HEIGHT_TRIMMED(7),
-		// �룒�뵽�뀍�겓�룑�겲�굢�겒�걚�졃�릦�겓�겘�궋�궧�깪�궚�깉驪붵굮岳앫걾�겇�겇潁�弱뤵걲�굥
+		// �뜝�럥吏귛뜝�럥�룙�뜝�럥占쎈엪�삕野껊낑�삕�뙴臾뺤삕野껊�먯삕�뤃占썲뜝�럡苡쇔뜝�럡肄℡뜝�럩二ⓨ뜝�럥�뵒�뜝�럡苡썲뜝�럡荑귛뜝�럡�뀘�뜝�럡�븣�뜝�럡臾ュ뜝�럡�뀯�뜝�럡�돮�솾�돃�뼨�뤃占쏙Ⅶ�끃鍮귛쳞�뼲�삕野껊돍�삕野껊뎾�릹�뜝�뜴�꽑筌뚮벀援됧뜝�럡�뜲
 		KEEP_ASPECT_RATIO_NO_EXPANDING(8),
-		// 鴉며리�걮�겒�걚竊덁릎鸚��겓�릦�굩�걵�굥竊�
+		// 渦깅맧흭�뵳�띿삕椰꾬옙�뜝�럡苡쇔뜝�럡肄℡죰�봾�쎔�뵳濡⑺닧�뜝�룞�삕野껊낑�삕�뵳占썲뜝�럡���뜝�럡援섇뜝�럡�뜲櫻뗫뵃�삕
 		NO_RESIZE(9),
 		NO_RESIZE_TRIMMED(10),
 		;
@@ -106,19 +107,19 @@ public abstract class SkinObject implements Disposable {
 	private static final float[] CENTERY = { 0.5f, 0, 0, 0, 0.5f, 0.5f, 0.5f, 1, 1, 1 };
 
 	/**
-	 * �썮邕㏘릎恙껁겗X佯㎪쮽(藥�塋�:0.0 - �뤂塋�:1.0)
+	 * �뜝�럩�쑏占쎄뎡占쎈짒�뵳濡�嫄꿰뙼怨댁퓖X俑앾옙占쎈젙�∽옙(占쎈엠�뜝�뜴二겼뜝占�:0.0 - �뜝�럥夷㎪セ�뿰�삕:1.0)
 	 */
 	private float centerx;
 	/**
-	 * �썮邕㏘릎恙껁겗Y佯㎪쮽(訝뗧ク:0.0 - 訝딁ク:1.0)
+	 * �뜝�럩�쑏占쎄뎡占쎈짒�뵳濡�嫄꿰뙼怨댁퓖Y俑앾옙占쎈젙�∽옙(庸뉗빖肉㏆옙沅�:0.0 - 庸뉗빖遊븝옙沅�:1.0)
 	 */
 	private float centery;
 	/**
-	 * �룒�뵽�뀍
+	 * �뜝�럥吏귛뜝�럥�룙�뜝�럥占쏙옙
 	 */
 	private SkinObjectDestination[] dst = new SkinObjectDestination[0];
 	
-	// 餓δ툔�곲쳵�잌뙑�뵪
+	// 濚욌꼬�똾�땸�뜝�럡�궓�댚�벝�삕占쎌뿺占쎌넁�뜝�럥�럞
 	private long starttime;
 	private long endtime;
 
@@ -250,11 +251,11 @@ public abstract class SkinObject implements Disposable {
 	}
 
 	/**
-	 * �뙁若싥걮�겍�셽�뼋�겓恙쒌걯�걼�룒�뵽�젞�윜�굮瓦붵걲
+	 * �뜝�럥�끉�븨�똻�뼅椰꾬옙�뜝�럡苡룟뜝�럩�걢�뜝�럥�렮�뜝�럡苡쏙옙嫄뀐옙萸썲쳞占썲뜝�럡援닷뜝�럥吏귛뜝�럥�룙�뜝�럩�젲�뜝�럩�맳�뜝�럡�럩占쎈��겫�벀援�
 	 * 
 	 * @param time
-	 *            �셽�뼋(ms)
-	 * @return �룒�뵽�젞�윜
+	 *            �뜝�럩�걢�뜝�럥�렮(ms)
+	 * @return �뜝�럥吏귛뜝�럥�룙�뜝�럩�젲�뜝�럩�맳
 	 */
 	public Rectangle getDestination(long time, MainState state) {
 		final int timer = dsttimer;
@@ -445,8 +446,8 @@ public abstract class SkinObject implements Disposable {
 		if (color == null || color.a == 0f || image == null) {
 			return;
 		}
-		if (mouseRect != null && !mouseRect.contains(state.main.getInputProcessor().getMouseX() - x,
-				state.main.getInputProcessor().getMouseY() - y)) {
+		if (mouseRect != null && !mouseRect.contains(mouseData.getMouseX() - x,
+				mouseData.getMouseY() - y)) {
 			return;
 		}
 		tmpRect.set(x, y, width, height);
@@ -619,7 +620,7 @@ public abstract class SkinObject implements Disposable {
 	}
 
 	/**
-	 * �궧�궘�꺍�궕�깣�궦�궒�궚�깉�겗�룒�뵽�뀍�굮烏①뤎�걲�굥�궚�꺀�궧
+	 * �뜝�럡�븣�뜝�럡�뀭�뜝�럡�떋�뜝�럡�뀧�뜝�럡臾띶뜝�럡�븢�뜝�럡�뀢�뜝�럡�뀯�뜝�럡�돮�뜝�럡荑곩뜝�럥吏귛뜝�럥�룙�뜝�럥占쎈엪�삕�뤃占쏙옙源쀯옙紐븝쭔濡녹삕椰꾨�먯삕�뤃恝�삕亦낆떣�삕�댆占썲뜝�럡�븣
 	 * 
 	 * @author exch
 	 */
@@ -627,7 +628,7 @@ public abstract class SkinObject implements Disposable {
 
 		public final long time;
 		/**
-		 * �룒�뵽�젞�윜
+		 * �뜝�럥吏귛뜝�럥�룙�뜝�럩�젲�뜝�럩�맳
 		 */
 		public final Rectangle region;
 		public final int acc;
@@ -644,7 +645,7 @@ public abstract class SkinObject implements Disposable {
 	}
 	
 	/**
-	 * �궕�깢�궩�긿�깉
+	 * �뜝�럡�뀧�뜝�럡臾꾢뜝�럡�븧�뜝�럡留쇿뜝�럡�돮
 	 * 
 	 * @author exch
 	 */

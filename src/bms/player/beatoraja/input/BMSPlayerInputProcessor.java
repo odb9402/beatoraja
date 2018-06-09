@@ -9,10 +9,9 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-import bms.player.beatoraja.PlayModeConfig.KeyboardConfig;
-import bms.player.beatoraja.PlayModeConfig.ControllerConfig;
-import bms.player.beatoraja.PlayModeConfig.MidiConfig;
 import bms.player.beatoraja.input.BMSPlayerInputDevice.Type;
+import bms.player.beatoraja.playmode.*;
+import bms.player.beatoraja.PlayModeConfig;
 
 import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.controllers.Controllers;
@@ -79,22 +78,14 @@ public class BMSPlayerInputProcessor {
 		devices.add(midiinput);
 	}
 
-	private Key[] key = new Key[256];
+
 
 	private BMSPlayerInputDevice lastKeyDevice;
 	private ArrayList<BMSPlayerInputDevice> devices;
 	
-	private Key[] numberKey = new Key[10];
-	private Key[] functionKey = new Key[12];
+
 
 	long starttime;
-
-	int mousex;
-	int mousey;
-	int mousebutton;
-	boolean mousepressed;
-	boolean mousedragged;
-	private boolean mouseMoved = false;
 
 	int scroll;
 
@@ -146,7 +137,7 @@ public class BMSPlayerInputProcessor {
 	public void setStartTime(long starttime) {
 		this.starttime = starttime;
 		if (starttime != 0) {
-			resetKeyTime();
+			keyData.resetKeyTime();
 			keylog.clear();
 			kbinput.clear();
 			for (BMControllerInputProcessor bm : bminput) {
@@ -161,44 +152,6 @@ public class BMSPlayerInputProcessor {
 		return starttime;
 	}
 
-	public long getKeyTime(int i) {
-		return key[i].getPressTime();
-	}
-
-	public void setKeyTime(int i, long time) {
-		key[i].setTime(time);
-	}
-	
-	public void resetKeyTime(int i) {
-		key[i].resetTime();
-	}
-	
-	public void resetKeyTime() {
-		for (int i = 0; i < getKeyLength(); i++)
-			key[i].resetTime();
-	}
-
-	public boolean getKeyState(int i) {
-		return key[i].getIsPressed();
-	}
-
-	public void setKeyState(int i, boolean state) {
-		key[i].setState(state);
-	}
-	
-	public void resetKeyState() {
-		for (int i = 0; i < getKeyLength(); i++)
-			key[i].setState(false);
-	}
-	
-	public boolean checkIfKeyPressed(int i) {
-		return key[i].checkIfPressed();
-	}
-	
-	public int getKeyLength() {
-		return key.length;
-	}
-
 	public BMSPlayerInputDevice getLastKeyChangedDevice() {
 		return lastKeyDevice;
 	}
@@ -208,22 +161,35 @@ public class BMSPlayerInputProcessor {
 	}
 
 	public void setPlayConfig(PlayModeConfig playconfig) {
-		// KB, �궠�꺍�깉�꺆�꺖�꺀�꺖, Midi�겗�릢�깭�궭�꺍�겓�겇�걚�겍�럲餓뽫쉪�눇�릤�굮若잍뼺
-		int[] kbkeys = playconfig.getKeyboardConfig().getKeyAssign();
-		boolean[] exclusive = new boolean[kbkeys.length];
-		resetKeyState();
-		resetKeyTime();
-		
-		int kbcount = setPlayConfig0(kbkeys,  exclusive);
-		
-		int[][] cokeys = new int[playconfig.getController().length][];
-		int cocount = 0;
-		for(int i = 0;i < cokeys.length;i++) {
-			cokeys[i] = playconfig.getController()[i].getKeyAssign();
-			cocount += setPlayConfig0(cokeys[i],  exclusive);
-		}
-				
-		MidiConfig.Input[] mikeys  = playconfig.getMidiConfig().getKeys();
+	      boolean[] exclusive = new boolean[playconfig.getKeyboardConfig().getKeyLength()];
+	      
+	      // KB, �궠�꺍�깉�꺆�꺖�꺀�꺖, Midi�겗�릢�깭�궭�꺍�겓�겇�걚�겍�럲餓뽫쉪�눇�릤�굮若잍뼺
+	      int kbcount = countKeyboard(playconfig, exclusive);
+	      int cocount = countController(playconfig, exclusive);
+	      int micount = countMidi(playconfig, exclusive);
+	      
+	      // �릢�깈�깘�궎�궧�겓�궘�꺖�궠�꺍�깢�궍�궛�굮�궩�긿�깉
+	      kbinput.setConfig(playconfig.getKeyboardConfig());
+	      for(int i = 0;i < bminput.length;i++) {
+	         for(ControllerConfig controller : playconfig.getController()) {
+	            if(bminput[i].getName().equals(controller.getName())) {
+	               bminput[i].setConfig(controller);
+	               break;
+	            }
+	         }
+	      }
+	      midiinput.setConfig(playconfig.getMidiConfig());
+	      
+	      if(kbcount >= cocount && kbcount >= micount) {
+	         type = Type.KEYBOARD;
+	      } else if(cocount >= kbcount && cocount >= micount) {
+	         type = Type.BM_CONTROLLER;
+	      } else {
+	         type = Type.MIDI;         
+	      }
+	   }	
+	private int countMidi(PlayModeConfig playconfig, boolean[] exclusive) {
+		Input[] mikeys  = playconfig.getMidiConfig().getKeys();
 		int micount = 0;
 		for(int i = 0;i < mikeys.length;i++) {
 			if(exclusive[i]) {
@@ -233,26 +199,26 @@ public class BMSPlayerInputProcessor {
 				micount++;
 			}
 		}
-		
-		// �릢�깈�깘�궎�궧�겓�궘�꺖�궠�꺍�깢�궍�궛�굮�궩�긿�깉
-		kbinput.setConfig(playconfig.getKeyboardConfig());
-		for(int i = 0;i < bminput.length;i++) {
-			for(ControllerConfig controller : playconfig.getController()) {
-				if(bminput[i].getName().equals(controller.getName())) {
-					bminput[i].setConfig(controller);
-					break;
-				}
-			}
+		return micount;
+	}
+
+	private int countController(PlayModeConfig playconfig, boolean[] exclusive) {
+		int[][] cokeys = new int[playconfig.getController().length][];
+		int cocount = 0;
+		for(int i = 0;i < cokeys.length;i++) {
+			cokeys[i] = playconfig.getController()[i].getKeys();
+			cocount += setPlayConfig0(cokeys[i],  exclusive);
 		}
-		midiinput.setConfig(playconfig.getMidiConfig());
+		return cocount;
+	}
+
+	private int countKeyboard(PlayModeConfig playconfig, boolean[] exclusive) {
+		int[] kbkeys = playconfig.getKeyboardConfig().getKeys();
+		keyData.resetKeyState();
+		keyData.resetKeyTime();
 		
-		if(kbcount >= cocount && kbcount >= micount) {
-			type = Type.KEYBOARD;
-		} else if(cocount >= kbcount && cocount >= micount) {
-			type = Type.BM_CONTROLLER;
-		} else {
-			type = Type.MIDI;			
-		}
+		int kbcount = setPlayConfig0(kbkeys,  exclusive);
+		return kbcount;
 	}
 	
 	public BMSPlayerInputDevice.Type getDeviceType() {
@@ -275,8 +241,8 @@ public class BMSPlayerInputProcessor {
 	public void setEnable(boolean enable) {
 		this.enable = enable;
 		if(!enable) {
-			resetKeyState();
-			resetKeyTime();
+			keyData.resetKeyState();
+			keyData.resetKeyTime();
 			for (BMSPlayerInputDevice device : devices) {
 				device.clear();
 			}
@@ -287,9 +253,9 @@ public class BMSPlayerInputProcessor {
 		if (!enable) {
 			return;
 		}
-		if (getKeyState(i) != pressed) {
-			setKeyState(i, pressed);
-			setKeyTime(i, presstime);
+		if (keyData.getKeyState(i) != pressed) {
+			keyData.setKeyState(i, pressed);
+			keyData.setKeyTime(i, presstime);
 			lastKeyDevice = device;
 			if (this.getStartTime() != 0) {
 				keylog.add((int) presstime, i, pressed);
@@ -364,57 +330,7 @@ public class BMSPlayerInputProcessor {
 		this.deletePressed = deletePressed;
 	}
 	
-	// methods for numberKey
-	public boolean getNumberState(int i) {
-		return numberKey[i].getIsPressed();
-	}
-
-	public long getNumberTime(int i) {
-		return numberKey[i].getPressTime();
-	}
 	
-	public void resetNumberTime(int i) {
-		numberKey[i].resetTime();
-	}
-	
-	public void setNumberState(int i, boolean state, long time) {
-		numberKey[i].setState(state);
-		numberKey[i].setTime(time);
-	}
-	
-	public boolean checkIfNumberPressed(int i) {
-		return numberKey[i].checkIfPressed();
-	}
-
-	// methods for functionKey
-	public boolean getFunctionstate(int i) {
-		return functionKey[i].getIsPressed();
-	}
-
-	public void setFunctionstate(int i, boolean state) {
-		functionKey[i].setState(state);
-	}
-
-	public long getFunctiontime(int i) {
-		return functionKey[i].getPressTime();
-	}
-
-	public void setFunctiontime(int i, long time) {
-		functionKey[i].setTime(time);
-	}
-	
-	public void resetFunctionTime(int i) {
-		functionKey[i].resetTime();
-	}
-	
-	public void setFunction(int i, boolean state, long time) {
-		functionKey[i].setState(state);
-		functionKey[i].setTime(time);
-	}
-
-	public boolean checkIfFunctionPressed(int i) {
-		return functionKey[i].checkIfPressed();
-	}
 	
 	
 	public boolean isSelectPressed() {
@@ -435,42 +351,6 @@ public class BMSPlayerInputProcessor {
 
 	public MidiInputProcessor getMidiInputProcessor() {
 		return midiinput;
-	}
-
-	public int getMouseX() {
-		return mousex;
-	}
-
-	public int getMouseY() {
-		return mousey;
-	}
-
-	public int getMouseButton() {
-		return mousebutton;
-	}
-
-	public boolean isMousePressed() {
-		return mousepressed;
-	}
-
-	public void setMousePressed() {
-		mousepressed = false;
-	}
-
-	public boolean isMouseDragged() {
-		return mousedragged;
-	}
-
-	public void setMouseDragged() {
-		mousedragged = false;
-	}
-
-	public boolean isMouseMoved() {
-		return mouseMoved;
-	}
-
-	public void setMouseMoved(boolean mouseMoved) {
-		this.mouseMoved = mouseMoved;
 	}
 
 	public int getScroll() {
@@ -529,14 +409,5 @@ public class BMSPlayerInputProcessor {
 		}
 	}
 
-	public boolean[] getKeystate() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public long[] getTime() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 }
